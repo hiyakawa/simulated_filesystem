@@ -1,0 +1,5 @@
+# ninja log v5
+0	41	1680660317778472749	build.ninja	e72756eb8d1b5af4
+0	223	1680660318002214566	CMakeFiles/simulated_filesystem.dir/TextFile.cpp.o	ea7689733aba8552
+0	1887	1680660319663186633	CMakeFiles/simulated_filesystem.dir/main.cpp.o	ebdf83f3338864f1
+1887	1932	1680660319715725549	simulated_filesystem	dd2ff0785533eedb
