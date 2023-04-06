@@ -1,5 +1,10 @@
 # ninja log v5
-0	41	1680660317778472749	build.ninja	e72756eb8d1b5af4
-0	223	1680660318002214566	CMakeFiles/simulated_filesystem.dir/TextFile.cpp.o	ea7689733aba8552
+0	41	1680742046997586970	build.ninja	e72756eb8d1b5af4
 0	1887	1680660319663186633	CMakeFiles/simulated_filesystem.dir/main.cpp.o	ebdf83f3338864f1
+0	223	1680660318002214566	CMakeFiles/simulated_filesystem.dir/TextFile.cpp.o	ea7689733aba8552
 1887	1932	1680660319715725549	simulated_filesystem	dd2ff0785533eedb
+2	400	1680744311324869267	CMakeFiles/simulated_filesystem.dir/ImageFile.cpp.o	f9a2bfa3c383269f
+2	401	1680744311324925309	CMakeFiles/simulated_filesystem.dir/TextFile.cpp.o	ea7689733aba8552
+2	541	1680744311465680261	CMakeFiles/simulated_filesystem.dir/SimpleFileSystem.cpp.o	9e4c24e8b384f721
+2	2812	1680744313729472054	CMakeFiles/simulated_filesystem.dir/main.cpp.o	ebdf83f3338864f1
+2812	2946	1680744313871693347	simulated_filesystem	cf0a559c0b9c3ae9

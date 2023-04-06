@@ -6,4 +6,6 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(simulated_filesystem main.cpp catch.h
         AbstractFile.h
         TextFile.h TextFile.cpp
-        )
+        ImageFile.h ImageFile.cpp
+        AbstractFileSystem.h
+        SimpleFileSystem.h SimpleFileSystem.cpp)

@@ -118,7 +118,7 @@ namespace Catch {
 // in configuration.md, too
 // ****************
 
-// In general each macro has a _NO_<feature name> form
+// In general each macro has a _NO_<feature filename_> form
 // (e.g. CATCH_CONFIG_NO_POSIX_SIGNALS) which disables the feature.
 // Many features, at point of detection, define an _INTERNAL_ macro, so they
 // can be combined, en-mass, with the _NO_ forms later.
@@ -470,7 +470,7 @@ namespace Catch {
 #ifdef CATCH_CONFIG_COUNTER
 #  define INTERNAL_CATCH_UNIQUE_NAME( name ) INTERNAL_CATCH_UNIQUE_NAME_LINE( name, __COUNTER__ )
 #else
-#  define INTERNAL_CATCH_UNIQUE_NAME( name ) INTERNAL_CATCH_UNIQUE_NAME_LINE( name, __LINE__ )
+#  define INTERNAL_CATCH_UNIQUE_NAME( filename_ ) INTERNAL_CATCH_UNIQUE_NAME_LINE( filename_, __LINE__ )
 #endif
 
 #include <iosfwd>
@@ -2467,7 +2467,7 @@ namespace Catch {
         virtual auto acquireGeneratorTracker( StringRef generatorName, SourceLineInfo const& lineInfo ) -> IGeneratorTracker& = 0;
 
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
-        virtual void benchmarkPreparing( std::string const& name ) = 0;
+        virtual void benchmarkPreparing( std::string const& filename_ ) = 0;
         virtual void benchmarkStarting( BenchmarkInfo const& info ) = 0;
         virtual void benchmarkEnded( BenchmarkStats<> const& stats ) = 0;
         virtual void benchmarkFailed( std::string const& error ) = 0;
@@ -4923,11 +4923,11 @@ namespace Catch {
                     std::string methodName = sel_getName(selector);
                     if( startsWith( methodName, "Catch_TestCase_" ) ) {
                         std::string testCaseName = methodName.substr( 15 );
-                        std::string name = Detail::getAnnotation( cls, "Name", testCaseName );
+                        std::string filename_ = Detail::getAnnotation( cls, "Name", testCaseName );
                         std::string desc = Detail::getAnnotation( cls, "Description", testCaseName );
                         const char* className = class_getName( cls );
 
-                        getMutableRegistryHub().registerTest( makeTestCase( new OcMethod( cls, selector ), className, NameAndTags( name.c_str(), desc.c_str() ), SourceLineInfo("",0) ) );
+                        getMutableRegistryHub().registerTest( makeTestCase( new OcMethod( cls, selector ), className, NameAndTags( filename_.c_str(), desc.c_str() ), SourceLineInfo("",0) ) );
                         noTestMethods++;
                     }
                 }
@@ -5033,10 +5033,10 @@ namespace Catch {
 
 ///////////////////////////////////////////////////////////////////////////////
 #define OC_MAKE_UNIQUE_NAME( root, uniqueSuffix ) root##uniqueSuffix
-#define OC_TEST_CASE2( name, desc, uniqueSuffix ) \
+#define OC_TEST_CASE2( filename_, desc, uniqueSuffix ) \
 +(NSString*) OC_MAKE_UNIQUE_NAME( Catch_Name_test_, uniqueSuffix ) \
 { \
-return @ name; \
+return @ filename_; \
 } \
 +(NSString*) OC_MAKE_UNIQUE_NAME( Catch_Description_test_, uniqueSuffix ) \
 { \
@@ -5044,7 +5044,7 @@ return @ desc; \
 } \
 -(void) OC_MAKE_UNIQUE_NAME( Catch_TestCase_test_, uniqueSuffix )
 
-#define OC_TEST_CASE( name, desc ) OC_TEST_CASE2( name, desc, __LINE__ )
+#define OC_TEST_CASE( filename_, desc ) OC_TEST_CASE2( filename_, desc, __LINE__ )
 
 // end catch_objc.hpp
 #endif
@@ -5233,9 +5233,9 @@ namespace Catch {
         void addFilter();
         bool separate();
 
-        // Handles common preprocessing of the pattern for name/tag patterns
+        // Handles common preprocessing of the pattern for filename_/tag patterns
         std::string preprocessPattern();
-        // Adds the current pattern as a test name
+        // Adds the current pattern as a test filename_
         void addNamePattern();
         // Adds the current pattern as a tag
         void addTagPattern();
@@ -5612,7 +5612,7 @@ namespace Catch {
 
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
     struct BenchmarkInfo {
-        std::string name;
+        std::string filename_;
         double estimatedDuration;
         int iterations;
         int samples;
@@ -6104,7 +6104,7 @@ namespace Catch {
     CATCH_INTERNAL_STOP_WARNINGS_SUPPRESSION
 #else // CATCH_CONFIG_DISABLE
 
-#define CATCH_REGISTER_REPORTER(name, reporterType)
+#define CATCH_REGISTER_REPORTER(filename_, reporterType)
 #define CATCH_REGISTER_LISTENER(listenerType)
 
 #endif // CATCH_CONFIG_DISABLE
@@ -6171,7 +6171,7 @@ namespace Catch {
         void sectionEnded(SectionStats const& _sectionStats) override;
 
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
-        void benchmarkPreparing(std::string const& name) override;
+        void benchmarkPreparing(std::string const& filename_) override;
         void benchmarkStarting(BenchmarkInfo const& info) override;
         void benchmarkEnded(BenchmarkStats<> const& stats) override;
         void benchmarkFailed(std::string const& error) override;
@@ -6410,7 +6410,7 @@ namespace Catch {
         void testRunEnded(TestRunStats const& testRunStats) override;
 
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
-        void benchmarkPreparing(std::string const& name) override;
+        void benchmarkPreparing(std::string const& filename_) override;
         void benchmarkStarting(BenchmarkInfo const&) override;
         void benchmarkEnded(BenchmarkStats<> const&) override;
         void benchmarkFailed(std::string const&) override;
@@ -7296,12 +7296,12 @@ namespace Catch {
 namespace Catch {
     namespace Benchmark {
         struct Benchmark {
-            Benchmark(std::string &&name)
-                : name(std::move(name)) {}
+            Benchmark(std::string &&filename_)
+                : filename_(std::move(filename_)) {}
 
             template <class FUN>
-            Benchmark(std::string &&name, FUN &&func)
-                : fun(std::move(func)), name(std::move(name)) {}
+            Benchmark(std::string &&filename_, FUN &&func)
+                : fun(std::move(func)), filename_(std::move(filename_)) {}
 
             template <typename Clock>
             ExecutionPlan<FloatDuration<Clock>> prepare(const IConfig &cfg, Environment<FloatDuration<Clock>> env) const {
@@ -7318,14 +7318,14 @@ namespace Catch {
 
                 auto env = Detail::measure_environment<Clock>();
 
-                getResultCapture().benchmarkPreparing(name);
+                getResultCapture().benchmarkPreparing(filename_);
                 CATCH_TRY{
                     auto plan = user_code([&] {
                         return prepare<Clock>(*cfg, env);
                     });
 
                     BenchmarkInfo info {
-                        name,
+                        filename_,
                         plan.estimated_duration.count(),
                         plan.iterations_per_sample,
                         cfg->benchmarkSamples(),
@@ -7365,7 +7365,7 @@ namespace Catch {
 
         private:
             Detail::BenchmarkFunction fun;
-            std::string name;
+            std::string filename_;
         };
     }
 } // namespace Catch
@@ -7373,12 +7373,12 @@ namespace Catch {
 #define INTERNAL_CATCH_GET_1_ARG(arg1, arg2, ...) arg1
 #define INTERNAL_CATCH_GET_2_ARG(arg1, arg2, ...) arg2
 
-#define INTERNAL_CATCH_BENCHMARK(BenchmarkName, name, benchmarkIndex)\
-    if( Catch::Benchmark::Benchmark BenchmarkName{name} ) \
+#define INTERNAL_CATCH_BENCHMARK(BenchmarkName, filename_, benchmarkIndex)\
+    if( Catch::Benchmark::Benchmark BenchmarkName{filename_} ) \
         BenchmarkName = [&](int benchmarkIndex)
 
-#define INTERNAL_CATCH_BENCHMARK_ADVANCED(BenchmarkName, name)\
-    if( Catch::Benchmark::Benchmark BenchmarkName{name} ) \
+#define INTERNAL_CATCH_BENCHMARK_ADVANCED(BenchmarkName, filename_)\
+    if( Catch::Benchmark::Benchmark BenchmarkName{filename_} ) \
         BenchmarkName = [&]
 
 // end catch_benchmark.hpp
@@ -7618,7 +7618,7 @@ namespace TestCaseTracking {
         void addNextFilters( std::vector<std::string> const& filters );
         //! Returns filters active in this tracker
         std::vector<std::string> const& getFilters() const;
-        //! Returns whitespace-trimmed name of the tracked section
+        //! Returns whitespace-trimmed filename_ of the tracked section
         std::string const& trimmedName() const;
     };
 
@@ -8108,7 +8108,7 @@ namespace Catch {
         auto acquireGeneratorTracker( StringRef generatorName, SourceLineInfo const& lineInfo ) -> IGeneratorTracker& override;
 
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
-        void benchmarkPreparing( std::string const& name ) override;
+        void benchmarkPreparing( std::string const& filename_ ) override;
         void benchmarkStarting( BenchmarkInfo const& info ) override;
         void benchmarkEnded( BenchmarkStats<> const& stats ) override;
         void benchmarkFailed( std::string const& error ) override;
@@ -9316,7 +9316,7 @@ namespace detail {
             m_ref = std::make_shared<BoundLambda<LambdaT>>( lambda );
         }
 
-        // The exe name is not parsed out of the normal tokens, but is handled specially
+        // The exe filename_ is not parsed out of the normal tokens, but is handled specially
         auto parse( std::string const&, TokenStream const &tokens ) const -> InternalParseResult override {
             return InternalParseResult::ok( ParseState( ParseResultType::NoMatch, tokens ) );
         }
@@ -9459,13 +9459,13 @@ namespace detail {
                 return Result::logicError( "No options supplied to Opt" );
             for( auto const &name : m_optNames ) {
                 if( name.empty() )
-                    return Result::logicError( "Option name cannot be empty" );
+                    return Result::logicError( "Option filename_ cannot be empty" );
 #ifdef CATCH_PLATFORM_WINDOWS
-                if( name[0] != '-' && name[0] != '/' )
-                    return Result::logicError( "Option name must begin with '-' or '/'" );
+                if( filename_[0] != '-' && filename_[0] != '/' )
+                    return Result::logicError( "Option filename_ must begin with '-' or '/'" );
 #else
                 if( name[0] != '-' )
-                    return Result::logicError( "Option name must begin with '-'" );
+                    return Result::logicError( "Option filename_ must begin with '-'" );
 #endif
             }
             return ParserRefImpl::validate();
@@ -9661,7 +9661,7 @@ using detail::Arg;
 // Wrapper for argc, argv from tests_main()
 using detail::Args;
 
-// Specifies the name of the executable
+// Specifies the filename_ of the executable
 using detail::ExeName;
 
 // Convenience wrapper for option parser that specifies the help option
@@ -9833,19 +9833,19 @@ namespace Catch {
             | Opt( config.outputFilename, "filename" )
                 ["-o"]["--out"]
                 ( "output filename" )
-            | Opt( setReporter, "name" )
+            | Opt( setReporter, "filename_" )
                 ["-r"]["--reporter"]
                 ( "reporter to use (defaults to console)" )
-            | Opt( config.name, "name" )
-                ["-n"]["--name"]
-                ( "suite name" )
+            | Opt( config.name, "filename_" )
+                ["-n"]["--filename_"]
+                ( "suite filename_" )
             | Opt( [&]( bool ){ config.abortAfter = 1; } )
                 ["-a"]["--abort"]
                 ( "abort at first failure" )
             | Opt( [&]( int x ){ config.abortAfter = x; }, "no. failures" )
                 ["-x"]["--abortx"]
                 ( "abort after x failures" )
-            | Opt( setWarning, "warning name" )
+            | Opt( setWarning, "warning filename_" )
                 ["-w"]["--warn"]
                 ( "enable warnings" )
             | Opt( [&]( bool flag ) { config.showDurations = flag ? ShowDurations::Always : ShowDurations::Never; }, "yes|no" )
@@ -9860,7 +9860,7 @@ namespace Catch {
             | Opt( config.filenamesAsTags )
                 ["-#"]["--filenames-as-tags"]
                 ( "adds a tag for the filename" )
-            | Opt( config.sectionsToRun, "section name" )
+            | Opt( config.sectionsToRun, "section filename_" )
                 ["-c"]["--section"]
                 ( "specify section to run" )
             | Opt( setVerbosity, "quiet|normal|high" )
@@ -9883,7 +9883,7 @@ namespace Catch {
                 ( "should output be colourised" )
             | Opt( config.libIdentify )
                 ["--libidentify"]
-                ( "report name and version according to libidentify standard" )
+                ( "report filename_ and version according to libidentify standard" )
             | Opt( setWaitForKeypress, "never|start|exit|both" )
                 ["--wait-for-keypress"]
                 ( "waits for a keypress before exiting" )
@@ -9902,7 +9902,7 @@ namespace Catch {
             | Opt( config.benchmarkWarmupTime, "benchmarkWarmupTime" )
                 ["--benchmark-warmup-time"]
                 ( "amount of time in milliseconds spent on warming up each test (default: 100)" )
-            | Arg( config.testsOrTags, "test name|pattern|tags" )
+            | Arg( config.testsOrTags, "test filename_|pattern|tags" )
                 ( "which test or tests to use" );
 
         return cli;
@@ -10587,7 +10587,7 @@ namespace Catch {
     namespace Detail {
 
         namespace {
-            // Extracts the actual name part of an enum instance
+            // Extracts the actual filename_ part of an enum instance
             // In other words, it returns the Blue part of Bikeshed::Colour::Blue
             StringRef extractInstanceName(StringRef enumInstance) {
                 // Find last occurrence of ":"
@@ -10793,7 +10793,7 @@ namespace {
 
 namespace Catch {
 
-    struct SignalDefs { DWORD id; const char* name; };
+    struct SignalDefs { DWORD id; const char* filename_; };
 
     // There is no 1-1 mapping between signals and windows exceptions.
     // Windows can easily distinguish between SO and SigSegV,
@@ -10808,7 +10808,7 @@ namespace Catch {
     static LONG CALLBACK handleVectoredException(PEXCEPTION_POINTERS ExceptionInfo) {
         for (auto const& def : signalDefs) {
             if (ExceptionInfo->ExceptionRecord->ExceptionCode == def.id) {
-                reportFatal(def.name);
+                reportFatal(def.filename_);
             }
         }
         // If its not an exception we care about, pass it along.
@@ -11039,7 +11039,7 @@ namespace Catch {
         static std::set<Verbosity> getSupportedVerbosities();
 
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
-        void benchmarkPreparing(std::string const& name) override;
+        void benchmarkPreparing(std::string const& filename_) override;
         void benchmarkStarting( BenchmarkInfo const& benchmarkInfo ) override;
         void benchmarkEnded( BenchmarkStats<> const& benchmarkStats ) override;
         void benchmarkFailed(std::string const&) override;
@@ -12876,8 +12876,8 @@ namespace Catch {
     }
 
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
-    void RunContext::benchmarkPreparing(std::string const& name) {
-        m_reporter->benchmarkPreparing(name);
+    void RunContext::benchmarkPreparing(std::string const& filename_) {
+        m_reporter->benchmarkPreparing(filename_);
     }
     void RunContext::benchmarkStarting( BenchmarkInfo const& info ) {
         m_reporter->benchmarkStarting( info );
@@ -13298,7 +13298,7 @@ namespace Catch {
 
         IStreamingReporterPtr createReporter(std::string const& reporterName, IConfigPtr const& config) {
             auto reporter = Catch::getRegistryHub().getReporterRegistry().create(reporterName, config);
-            CATCH_ENFORCE(reporter, "No reporter registered with name: '" << reporterName << "'");
+            CATCH_ENFORCE(reporter, "No reporter registered with filename_: '" << reporterName << "'");
 
             return reporter;
         }
@@ -13997,7 +13997,7 @@ namespace Catch {
 
     void TagAliasRegistry::add( std::string const& alias, std::string const& tag, SourceLineInfo const& lineInfo ) {
         CATCH_ENFORCE( startsWith(alias, "[@") && endsWith(alias, ']'),
-                      "error: tag alias, '" << alias << "' is not of the form [@alias name].\n" << lineInfo );
+                      "error: tag alias, '" << alias << "' is not of the form [@alias filename_].\n" << lineInfo );
 
         CATCH_ENFORCE( m_registry.insert(std::make_pair(alias, TagAlias(tag, lineInfo))).second,
                       "error: tag alias, '" << alias << "' already registered.\n"
@@ -14045,7 +14045,7 @@ namespace Catch {
         }
         void enforceNotReservedTag( std::string const& tag, SourceLineInfo const& _lineInfo ) {
             CATCH_ENFORCE( !isReservedTag(tag),
-                          "Tag name: [" << tag << "] is not allowed.\n"
+                          "Tag filename_: [" << tag << "] is not allowed.\n"
                           << "Tag names starting with non alphanumeric characters are reserved\n"
                           << _lineInfo );
         }
@@ -16451,7 +16451,7 @@ ConsoleReporter::ConsoleReporter(ReporterConfig const& config)
         if (config.fullConfig()->benchmarkNoAnalysis())
         {
             return{
-                { "benchmark name", CATCH_CONFIG_CONSOLE_WIDTH - 43, ColumnInfo::Left },
+                { "benchmark filename_", CATCH_CONFIG_CONSOLE_WIDTH - 43, ColumnInfo::Left },
                 { "     samples", 14, ColumnInfo::Right },
                 { "  iterations", 14, ColumnInfo::Right },
                 { "        mean", 14, ColumnInfo::Right }
@@ -16460,7 +16460,7 @@ ConsoleReporter::ConsoleReporter(ReporterConfig const& config)
         else
         {
             return{
-                { "benchmark name", CATCH_CONFIG_CONSOLE_WIDTH - 43, ColumnInfo::Left },
+                { "benchmark filename_", CATCH_CONFIG_CONSOLE_WIDTH - 43, ColumnInfo::Left },
                 { "samples      mean       std dev", 14, ColumnInfo::Right },
                 { "iterations   low mean   low std dev", 14, ColumnInfo::Right },
                 { "estimated    high mean  high std dev", 14, ColumnInfo::Right }
@@ -16527,10 +16527,10 @@ void ConsoleReporter::sectionEnded(SectionStats const& _sectionStats) {
 }
 
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
-void ConsoleReporter::benchmarkPreparing(std::string const& name) {
+void ConsoleReporter::benchmarkPreparing(std::string const& filename_) {
 	lazyPrintWithoutClosingBenchmarkTable();
 
-	auto nameCol = Column(name).width(static_cast<std::size_t>(m_tablePrinter->columnInfos()[0].width - 2));
+	auto nameCol = Column(filename_).width(static_cast<std::size_t>(m_tablePrinter->columnInfos()[0].width - 2));
 
 	bool firstLine = true;
 	for (auto line : nameCol) {
@@ -16913,7 +16913,7 @@ namespace Catch {
         XmlWriter::ScopedElement e = xml.scopedElement( "testsuite" );
 
         TestGroupStats const& stats = groupNode.value;
-        xml.writeAttribute( "name", stats.groupInfo.name );
+        xml.writeAttribute( "filename_", stats.groupInfo.name );
         xml.writeAttribute( "errors", unexpectedExceptions );
         xml.writeAttribute( "failures", stats.totals.assertions.failed-unexpectedExceptions );
         xml.writeAttribute( "tests", stats.totals.assertions.total() );
@@ -16929,12 +16929,12 @@ namespace Catch {
             auto properties = xml.scopedElement("properties");
             if (m_config->hasTestFilters()) {
                 xml.scopedElement("property")
-                    .writeAttribute("name", "filters")
+                    .writeAttribute("filename_", "filters")
                     .writeAttribute("value", serializeFilters(m_config->getTestsOrTags()));
             }
             if (m_config->rngSeed() != 0) {
                 xml.scopedElement("property")
-                    .writeAttribute("name", "random-seed")
+                    .writeAttribute("filename_", "random-seed")
                     .writeAttribute("value", m_config->rngSeed());
             }
         }
@@ -16983,11 +16983,11 @@ namespace Catch {
             XmlWriter::ScopedElement e = xml.scopedElement( "testcase" );
             if( className.empty() ) {
                 xml.writeAttribute( "classname", name );
-                xml.writeAttribute( "name", "root" );
+                xml.writeAttribute( "filename_", "root" );
             }
             else {
                 xml.writeAttribute( "classname", className );
-                xml.writeAttribute( "name", name );
+                xml.writeAttribute( "filename_", name );
             }
             xml.writeAttribute( "time", formatDuration( sectionNode.stats.durationInSeconds ) );
             // This is not ideal, but it should be enough to mimic gtest's
@@ -17126,11 +17126,11 @@ namespace Catch {
     }
 
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
-    void ListeningReporter::benchmarkPreparing( std::string const& name ) {
+    void ListeningReporter::benchmarkPreparing( std::string const& filename_ ) {
 		for (auto const& listener : m_listeners) {
-			listener->benchmarkPreparing(name);
+			listener->benchmarkPreparing(filename_);
 		}
-		m_reporter->benchmarkPreparing(name);
+		m_reporter->benchmarkPreparing(filename_);
 	}
     void ListeningReporter::benchmarkStarting( BenchmarkInfo const& benchmarkInfo ) {
         for ( auto const& listener : m_listeners ) {
@@ -17282,7 +17282,7 @@ namespace Catch {
             m_xml.writeStylesheetRef( stylesheetRef );
         m_xml.startElement( "Catch" );
         if( !m_config->name().empty() )
-            m_xml.writeAttribute( "name", m_config->name() );
+            m_xml.writeAttribute( "filename_", m_config->name() );
         if (m_config->testSpec().hasFilters())
             m_xml.writeAttribute( "filters", serializeFilters( m_config->getTestsOrTags() ) );
         if( m_config->rngSeed() != 0 )
@@ -17293,13 +17293,13 @@ namespace Catch {
     void XmlReporter::testGroupStarting( GroupInfo const& groupInfo ) {
         StreamingReporterBase::testGroupStarting( groupInfo );
         m_xml.startElement( "Group" )
-            .writeAttribute( "name", groupInfo.name );
+            .writeAttribute( "filename_", groupInfo.name );
     }
 
     void XmlReporter::testCaseStarting( TestCaseInfo const& testInfo ) {
         StreamingReporterBase::testCaseStarting(testInfo);
         m_xml.startElement( "TestCase" )
-            .writeAttribute( "name", trim( testInfo.name ) )
+            .writeAttribute( "filename_", trim( testInfo.name ) )
             .writeAttribute( "description", testInfo.description )
             .writeAttribute( "tags", testInfo.tagsAsString() );
 
@@ -17314,7 +17314,7 @@ namespace Catch {
         StreamingReporterBase::sectionStarting( sectionInfo );
         if( m_sectionDepth++ > 0 ) {
             m_xml.startElement( "Section" )
-                .writeAttribute( "name", trim( sectionInfo.name ) );
+                .writeAttribute( "filename_", trim( sectionInfo.name ) );
             writeSourceInfo( sectionInfo.lineInfo );
             m_xml.ensureTagClosed();
         }
@@ -17455,9 +17455,9 @@ namespace Catch {
     }
 
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
-    void XmlReporter::benchmarkPreparing(std::string const& name) {
+    void XmlReporter::benchmarkPreparing(std::string const& filename_) {
         m_xml.startElement("BenchmarkResults")
-            .writeAttribute("name", name);
+            .writeAttribute("filename_", filename_);
     }
 
     void XmlReporter::benchmarkStarting(BenchmarkInfo const &info) {
@@ -17666,8 +17666,8 @@ int tests_main (int argc, char * const argv[]) {
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
 #define CATCH_BENCHMARK(...) \
     INTERNAL_CATCH_BENCHMARK(INTERNAL_CATCH_UNIQUE_NAME(C_A_T_C_H_B_E_N_C_H_), INTERNAL_CATCH_GET_1_ARG(__VA_ARGS__,,), INTERNAL_CATCH_GET_2_ARG(__VA_ARGS__,,))
-#define CATCH_BENCHMARK_ADVANCED(name) \
-    INTERNAL_CATCH_BENCHMARK_ADVANCED(INTERNAL_CATCH_UNIQUE_NAME(C_A_T_C_H_B_E_N_C_H_), name)
+#define CATCH_BENCHMARK_ADVANCED(filename_) \
+    INTERNAL_CATCH_BENCHMARK_ADVANCED(INTERNAL_CATCH_UNIQUE_NAME(C_A_T_C_H_B_E_N_C_H_), filename_)
 #endif // CATCH_CONFIG_ENABLE_BENCHMARKING
 
 // If CATCH_CONFIG_PREFIX_ALL is not defined then the CATCH_ prefix is not required
@@ -17770,8 +17770,8 @@ int tests_main (int argc, char * const argv[]) {
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
 #define BENCHMARK(...) \
     INTERNAL_CATCH_BENCHMARK(INTERNAL_CATCH_UNIQUE_NAME(C_A_T_C_H_B_E_N_C_H_), INTERNAL_CATCH_GET_1_ARG(__VA_ARGS__,,), INTERNAL_CATCH_GET_2_ARG(__VA_ARGS__,,))
-#define BENCHMARK_ADVANCED(name) \
-    INTERNAL_CATCH_BENCHMARK_ADVANCED(INTERNAL_CATCH_UNIQUE_NAME(C_A_T_C_H_B_E_N_C_H_), name)
+#define BENCHMARK_ADVANCED(filename_) \
+    INTERNAL_CATCH_BENCHMARK_ADVANCED(INTERNAL_CATCH_UNIQUE_NAME(C_A_T_C_H_B_E_N_C_H_), filename_)
 #endif // CATCH_CONFIG_ENABLE_BENCHMARKING
 
 using Catch::Detail::Approx;

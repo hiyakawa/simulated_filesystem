@@ -4,8 +4,8 @@
 
 class TextFile : public AbstractFile {
 private:
-    std::vector<char> contents_;
     std::string       filename_;
+    std::vector<char> contents_;
 
 public:
 //    TextFile();
@@ -14,11 +14,11 @@ public:
 //    TextFile(TextFile&&);
     ~TextFile() = default;
 
-    virtual unsigned int getSize() override;
-    virtual std::string  getName() override;
-    virtual int          write(std::vector<char>) override;
-    virtual int          append(std::vector<char>) override;
-    virtual void         read() override;
+    unsigned int getSize() override;
+    std::string  getName() override;
+    int          write(std::vector<char>) override;
+    int          append(std::vector<char>) override;
+    void         read() override;
 
 //	virtual void accept(AbstractFileVisitor*) override;
 //	virtual AbstractFile* clone(string) override;
