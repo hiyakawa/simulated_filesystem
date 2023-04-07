@@ -45,15 +45,14 @@ int ImageFile::append(std::vector<char> vec) {
 	return NO_APPEND_FOR_IMAGES;
 }
 
-void ImageFile::read() {
-    std::cout << "print the image from the top row down" << std::endl;
+std::vector<char> ImageFile::read() {
+    return contents_;
 }
 
-//void ImageFile::accept(AbstractFileVisitor* visit)
-//{
-//	visit->visit_ImageFile(this);
-//}
-//
+void ImageFile::accept(AbstractFileVisitor* visit) {
+	visit->visitImageFile(this);
+}
+
 //AbstractFile* ImageFile::clone(string new_name)
 //{
 //	AbstractFile* copy = new ImageFile(new_name);

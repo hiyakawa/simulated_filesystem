@@ -1,6 +1,6 @@
 #pragma once
 
-//#include "AbstractFileVisitor.h"
+#include "AbstractFileVisitor.h"
 #include <string>
 #include <vector>
 
@@ -8,12 +8,12 @@ class AbstractFile {
 public:
 	~AbstractFile() = default;
 
-	virtual void          read() = 0;
-	virtual int           write(std::vector<char>) = 0;
-	virtual int           append(std::vector<char>) = 0;
-	virtual unsigned int  getSize() = 0;
-	virtual std::string   getName() = 0;
-//	virtual void          accept(AbstractFileVisitor*) = 0;
+	virtual std::vector<char> read() = 0;
+	virtual int               write(std::vector<char>) = 0;
+	virtual int               append(std::vector<char>) = 0;
+	virtual unsigned int      getSize() = 0;
+	virtual std::string       getName() = 0;
+	virtual void              accept(AbstractFileVisitor*) = 0;
 //	virtual AbstractFile* clone(std::string) = 0;
 };
 
@@ -21,7 +21,6 @@ enum results {
 	SUCCESS,
     INVALID_SIZE,
     INVALID_SYMBOL,
-    INVALID_EXTENSION,
     NO_APPEND_FOR_IMAGES,
     FILE_ALREADY_OPEN,
     FILE_FAILED_OPEN,

@@ -10,7 +10,6 @@ private:
 
 public:
 	int                   addFile(std::string, AbstractFile*) override;
-	int                   createFile(std::string) override;
     AbstractFile*         openFile(std::string) override;
     int                   closeFile(AbstractFile*) override;
     int                   deleteFile(std::string) override;

@@ -70,6 +70,24 @@ build CMakeFiles/simulated_filesystem.dir/SimpleFileSystem.cpp.o: CXX_COMPILER__
   OBJECT_DIR = CMakeFiles/simulated_filesystem.dir
   OBJECT_FILE_DIR = CMakeFiles/simulated_filesystem.dir
 
+build CMakeFiles/simulated_filesystem.dir/SimpleFileFactory.cpp.o: CXX_COMPILER__simulated_filesystem_Debug /Users/laurazhang/Repos/simulated_filesystem/SimpleFileFactory.cpp || cmake_object_order_depends_target_simulated_filesystem
+  DEP_FILE = CMakeFiles/simulated_filesystem.dir/SimpleFileFactory.cpp.o.d
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk -fcolor-diagnostics -std=gnu++17
+  OBJECT_DIR = CMakeFiles/simulated_filesystem.dir
+  OBJECT_FILE_DIR = CMakeFiles/simulated_filesystem.dir
+
+build CMakeFiles/simulated_filesystem.dir/BasicDisplayVisitor.cpp.o: CXX_COMPILER__simulated_filesystem_Debug /Users/laurazhang/Repos/simulated_filesystem/BasicDisplayVisitor.cpp || cmake_object_order_depends_target_simulated_filesystem
+  DEP_FILE = CMakeFiles/simulated_filesystem.dir/BasicDisplayVisitor.cpp.o.d
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk -fcolor-diagnostics -std=gnu++17
+  OBJECT_DIR = CMakeFiles/simulated_filesystem.dir
+  OBJECT_FILE_DIR = CMakeFiles/simulated_filesystem.dir
+
+build CMakeFiles/simulated_filesystem.dir/MetadataDisplayVisitor.cpp.o: CXX_COMPILER__simulated_filesystem_Debug /Users/laurazhang/Repos/simulated_filesystem/MetadataDisplayVisitor.cpp || cmake_object_order_depends_target_simulated_filesystem
+  DEP_FILE = CMakeFiles/simulated_filesystem.dir/MetadataDisplayVisitor.cpp.o.d
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk -fcolor-diagnostics -std=gnu++17
+  OBJECT_DIR = CMakeFiles/simulated_filesystem.dir
+  OBJECT_FILE_DIR = CMakeFiles/simulated_filesystem.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target simulated_filesystem
@@ -78,7 +96,7 @@ build CMakeFiles/simulated_filesystem.dir/SimpleFileSystem.cpp.o: CXX_COMPILER__
 #############################################
 # Link the executable simulated_filesystem
 
-build simulated_filesystem: CXX_EXECUTABLE_LINKER__simulated_filesystem_Debug CMakeFiles/simulated_filesystem.dir/main.cpp.o CMakeFiles/simulated_filesystem.dir/TextFile.cpp.o CMakeFiles/simulated_filesystem.dir/ImageFile.cpp.o CMakeFiles/simulated_filesystem.dir/SimpleFileSystem.cpp.o
+build simulated_filesystem: CXX_EXECUTABLE_LINKER__simulated_filesystem_Debug CMakeFiles/simulated_filesystem.dir/main.cpp.o CMakeFiles/simulated_filesystem.dir/TextFile.cpp.o CMakeFiles/simulated_filesystem.dir/ImageFile.cpp.o CMakeFiles/simulated_filesystem.dir/SimpleFileSystem.cpp.o CMakeFiles/simulated_filesystem.dir/SimpleFileFactory.cpp.o CMakeFiles/simulated_filesystem.dir/BasicDisplayVisitor.cpp.o CMakeFiles/simulated_filesystem.dir/MetadataDisplayVisitor.cpp.o
   FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk
   OBJECT_DIR = CMakeFiles/simulated_filesystem.dir
   POST_BUILD = :

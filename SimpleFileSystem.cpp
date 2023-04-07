@@ -1,6 +1,5 @@
 #include "SimpleFileSystem.h"
 #include "TextFile.h"
-#include "ImageFile.h"
 #include <iostream>
 #include <fstream>
 
@@ -17,31 +16,6 @@ int SimpleFileSystem::addFile(std::string filename, AbstractFile* file) {
     allFiles_.insert(p);
 
     return SUCCESS;
-}
-
-int SimpleFileSystem::createFile(std::string name) {
-    std::string extension = name.substr(name.find('.'));
-
-	if (allFiles_.find(name) != allFiles_.end()) {
-		return FILE_ALREADY_EXIST;
-	}
-
-    AbstractFile* newFile;
-
-    if (extension == ".txt") {
-        newFile = new TextFile(name);
-    }
-    else if (extension == ".img") {
-        newFile = new ImageFile(name);
-    }
-    else {
-        return INVALID_EXTENSION;
-    }
-
-    std::pair<std::string, AbstractFile*> p = make_pair(newFile->getName(), newFile);
-    allFiles_.insert(p);
-
-	return SUCCESS;
 }
 
 AbstractFile* SimpleFileSystem::openFile(std::string filename) {

@@ -4,6 +4,9 @@
 #include "TextFile.h"
 #include "ImageFile.h"
 #include "SimpleFileSystem.h"
+#include "SimpleFileFactory.h"
+#include "BasicDisplayVisitor.h"
+#include "MetadataDisplayVisitor.h"
 #include <iostream>
 
 bool run_tests() {
@@ -88,9 +91,8 @@ TEST_CASE("read") {
     std::string wordShouldBe = "hi";
     std::string word;
     ss >> word;
-    // ASSIGN COUT BACK TO STDOUT
+    // ASSIGN std::cout BACK TO STDOUT
     std::cout.rdbuf(backup);
-    CHECK(wordShouldBe == word);
     CHECK(0 == resWrite);
 }
 
@@ -111,9 +113,8 @@ TEST_CASE("readWithAppend") {
     std::string wordShouldBe = "hihi";
     std::string word;
     ss >> word;
-    // ASSIGN COUT BACK TO STDOUT
+    // ASSIGN std::cout BACK TO STDOUT
     std::cout.rdbuf(backup);
-    CHECK(wordShouldBe == word);
 }
 
 TEST_CASE("constructor2") {
@@ -156,9 +157,8 @@ TEST_CASE("read2") {
     std::string wordShouldBe = "hi";
     std::string word;
     ss >> word;
-    // ASSIGN COUT BACK TO STDOUT
+    // ASSIGN std::cout BACK TO STDOUT
     std::cout.rdbuf(backup);
-    CHECK(wordShouldBe == word);
     CHECK(0 == resWrite);
 }
 
@@ -179,12 +179,11 @@ TEST_CASE("readWithAppend2") {
     std::string wordShouldBe = "hihi";
     std::string word;
     ss >> word;
-    // ASSIGN COUT BACK TO STDOUT
+    // ASSIGN std::cout BACK TO STDOUT
     std::cout.rdbuf(backup);
-    CHECK(wordShouldBe == word);
 }
 
-TEST_CASE("contstructor") {
+TEST_CASE("constructor3") {
     std::string fileName = "FileName.img";
     unsigned int fileSize = 0;
     ImageFile t(fileName);
@@ -222,46 +221,6 @@ TEST_CASE("appendInvalid") {
     ImageFile t(fileName);
     std::vector<char> v = { 'X', ' ', 'X', ' ', 'Y', ' ', 'X',' ', 'X', '3' };
     CHECK(0 != t.append(v)); // can't append to image
-}
-
-//TEST_CASE("read3") {
-//    std::string fileName = "FileName.img";
-//    ImageFile t(fileName);
-//    std::vector<char> v = {'X', ' ', 'X', ' ', 'X', ' ', 'X', ' ', 'X', '3'};
-//    CHECK(0 == t.write(v));
-//    // REDIRECT STD STREAM
-//    std::streambuf *backup;
-//    backup = std::cout.rdbuf();
-//    std::stringstream ss;
-//    std::cout.rdbuf(ss.rdbuf());
-//    t.read();
-//    std::string outputShouldBe = "X";
-//    std::string word;
-//    int count = 0;
-//    while (ss >> word) {
-//        CHECK(outputShouldBe == word);
-//        ++count;
-//    }
-//    // ASSIGN COUT BACK TO STDOUT
-//    std::cout.rdbuf(backup);
-//    CHECK(5 == count);
-//}
-
-TEST_CASE("createFileValid") {
-    SimpleFileSystem sfs;
-    CHECK(0 == sfs.createFile("FileName.img"));
-    CHECK(0 == sfs.createFile("FileName.txt"));
-}
-
-TEST_CASE("createFileAlreadyExists") {
-    SimpleFileSystem sfs;
-    CHECK(0 == sfs.createFile("FileName.img"));
-    CHECK(0 != sfs.createFile("FileName.img")); // accepts any non-zero value
-}
-
-TEST_CASE("createUnknownExtension") {
-    SimpleFileSystem sfs;
-    CHECK(0 != sfs.createFile("FileName.bla"));
 }
 
 TEST_CASE("addValid") {
@@ -306,12 +265,6 @@ TEST_CASE("openValid") {
     AbstractFile* res1 = sfs.openFile(img->getName());
     bool sameAddress = &(*img) == &(*res1);
     CHECK(sameAddress);
-
-    // check using create -- a quick check to see that create adds successfully and open finds the file by returning a pointer that  is not null
-    CHECK(0 == sfs.createFile("FileName.txt"));
-    AbstractFile* res2 = sfs.openFile("FileName.txt");
-    bool nullCheck = res2 == nullptr;
-    CHECK_FALSE(nullCheck);
 }
 
 TEST_CASE("openFileNotAdded") {
@@ -354,4 +307,131 @@ TEST_CASE("closeNotAdded") {
     SimpleFileSystem sfs;
     ImageFile* img = new ImageFile("FileName.img");
     CHECK(0 != sfs.closeFile(img));
+}
+
+TEST_CASE("createFileValid2") {
+    SimpleFileFactory sff;
+    AbstractFile* res1 = sff.createFile("FileName.img");
+    bool isNull1 = res1 == nullptr;
+    CHECK(! isNull1);
+    AbstractFile* res2 = sff.createFile("FileName.txt");
+    bool isNull2 = res2 == nullptr;
+    CHECK(! isNull2);
+}
+
+TEST_CASE("createUnknownExtension2") {
+    SimpleFileFactory sfs;
+    AbstractFile* res1 = sfs.createFile("FileName.bla");
+    bool isNull = res1 == nullptr;
+    CHECK(isNull);
+}
+
+TEST_CASE("visitTextFile") {
+    std::string fileName = "FileName.txt";
+    TextFile t(fileName);
+    std::vector<char> v = { 'h', 'i' };
+    int resWrite = t.write(v);
+    // REDIRECT STD STREAM
+    std::streambuf* backup;
+    backup = std::cout.rdbuf();
+    std::stringstream ss;
+    std::cout.rdbuf(ss.rdbuf());
+    AbstractFileVisitor* bdv = new BasicDisplayVisitor;
+    t.accept(bdv);
+    std::string wordShouldBe = "hi";
+    std::string word;
+    ss >> word;
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup);
+    CHECK(wordShouldBe == word);
+    CHECK(0 == resWrite);
+}
+
+TEST_CASE("visitImageFile") {
+    std::string fileName = "FileName.img";
+    ImageFile t(fileName);
+    std::vector<char> v = { 'X', ' ', 'X', ' ', 'X', ' ', 'X',' ', 'X', '3' };
+    CHECK(0 == t.write(v));
+    // REDIRECT STD STREAM
+    std::streambuf* backup;
+    backup = std::cout.rdbuf();
+    std::stringstream ss;
+    std::cout.rdbuf(ss.rdbuf());
+    AbstractFileVisitor* bdv = new BasicDisplayVisitor;
+    t.accept(bdv);
+    std::string outputShouldBe = "X";
+    std::string word;
+    int count = 0;
+    while (ss >> word) { // no skip ws -- wont skip white space! would have to extract one character at a time
+        CHECK(outputShouldBe == word);
+        ++count;
+    }
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup);
+    CHECK(5 == count);
+}
+
+TEST_CASE("visitTextFile2") { // tests the output of the metadata display visitor for a text file, expects the filename, type and size to be included in the print statement
+    std::string fileName = "FileName.txt";
+    TextFile t(fileName);
+    std::vector<char> v = { 'h', 'i' };
+    CHECK(0 == t.write(v));
+    // REDIRECT STD STREAM
+    std::streambuf* backup;
+    backup = std::cout.rdbuf();
+    std::stringstream ss;
+    std::cout.rdbuf(ss.rdbuf());
+    AbstractFileVisitor* bdv = new MetadataDisplayVisitor;
+    t.accept(bdv);
+    std::string word;
+    std::vector<std::string> printedWords;
+    while (ss >> word) {
+        printedWords.push_back(word);
+    }
+    std::vector<std::string>::iterator it1;
+    std::vector<std::string>::iterator it2;
+    std::vector<std::string>::iterator it3;
+    it1 = std::find(printedWords.begin(), printedWords.end(), fileName);
+    bool notEqual1 = it1 == printedWords.end();
+    CHECK(! notEqual1);
+    it2 = std::find(printedWords.begin(), printedWords.end(), std::to_string(t.getSize()));
+    bool notEqual2 = it2 == printedWords.end();
+    CHECK(! notEqual2);
+    it3 = std::find(printedWords.begin(), printedWords.end(), "text");
+    bool notEqual3 = it3 == printedWords.end();
+    CHECK(! notEqual3);
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup);
+}
+TEST_CASE("visitImageFile2") {
+    std::string fileName = "FileName.img";
+    ImageFile t(fileName);
+    std::vector<char> v = { 'X', ' ', 'X', ' ', 'X', ' ', 'X',' ', 'X', '3' };
+    CHECK(0 == t.write(v));
+    // REDIRECT STD STREAM
+    std::streambuf* backup;
+    backup = std::cout.rdbuf();
+    std::stringstream ss;
+    std::cout.rdbuf(ss.rdbuf());
+    AbstractFileVisitor* bdv = new MetadataDisplayVisitor;
+    t.accept(bdv);
+    std::string word;
+    std::vector<std::string> printedWords;
+    while (ss >> word) {
+        printedWords.push_back(word);
+    }
+    std::vector<std::string>::iterator it1;
+    std::vector<std::string>::iterator it2;
+    std::vector<std::string>::iterator it3;
+    it1 = std::find(printedWords.begin(), printedWords.end(), fileName);
+    bool notEqual1 = it1 == printedWords.end();
+    CHECK(! notEqual1);
+    it2 = std::find(printedWords.begin(), printedWords.end(), std::to_string(t.getSize()));
+    bool notEqual2 = it2 == printedWords.end();
+    CHECK(! notEqual2);
+    it3 = std::find(printedWords.begin(), printedWords.end(), "image");
+    bool notEqual3 = it3 == printedWords.end();
+    CHECK(! notEqual3);
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup);
 }

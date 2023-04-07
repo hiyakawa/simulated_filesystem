@@ -1,22 +1,8 @@
 #include "TextFile.h"
-#include <iostream>
-
-//TextFile::TextFile()
-//	: filename_(""), contents_(vector<char>()) {}
 
 TextFile::TextFile(std::string filename) {
     filename_ = filename;
 }
-
-//TextFile::TextFile(const TextFile& c)
-//	: filename_(c.filename_), contents_(c.contents_) {}
-//
-//TextFile::TextFile(TextFile&& c)
-//	: filename_(c.filename_), contents_(c.contents_)
-//{
-//	c.filename_ = "";
-//	c.contents_.resize(0);
-//}
 
 unsigned int TextFile::getSize() {
     return contents_.size();
@@ -40,17 +26,14 @@ int TextFile::append(std::vector<char> input) {
     return SUCCESS;
 }
 
-void TextFile::read() {
-    for (std::size_t i = 0; i < contents_.size(); i++) {
-		std::cout << contents_[i];
-	}
+std::vector<char> TextFile::read() {
+    return contents_;
 }
 
-//void TextFile::accept(AbstractFileVisitor* visit)
-//{
-//	visit->visit_TextFile(this);
-//}
-//
+void TextFile::accept(AbstractFileVisitor* visit) {
+	visit->visitTextFile(this);
+}
+
 //AbstractFile* TextFile::clone(string new_name)
 //{
 //	AbstractFile* copy = new TextFile(new_name);

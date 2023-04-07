@@ -8,4 +8,9 @@ add_executable(simulated_filesystem main.cpp catch.h
         TextFile.h TextFile.cpp
         ImageFile.h ImageFile.cpp
         AbstractFileSystem.h
-        SimpleFileSystem.h SimpleFileSystem.cpp)
+        SimpleFileSystem.h SimpleFileSystem.cpp
+        AbstractFileFactory.h
+        SimpleFileFactory.h SimpleFileFactory.cpp
+        AbstractFileVisitor.h
+        BasicDisplayVisitor.h BasicDisplayVisitor.cpp
+        MetadataDisplayVisitor.h MetadataDisplayVisitor.cpp)
