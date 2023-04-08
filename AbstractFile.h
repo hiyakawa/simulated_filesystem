@@ -30,7 +30,7 @@ enum results {
 
 
     l,
-    invalid_password,
+    INVALID_PASSWORD,
     insertion_failed,
     user_quit,
     user_help,

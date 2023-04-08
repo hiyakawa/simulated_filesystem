@@ -7,6 +7,7 @@
 #include "SimpleFileFactory.h"
 #include "BasicDisplayVisitor.h"
 #include "MetadataDisplayVisitor.h"
+#include "PasswordProxy.h"
 #include <iostream>
 
 bool run_tests() {
@@ -434,4 +435,310 @@ TEST_CASE("visitImageFile2") {
     CHECK(! notEqual3);
     // ASSIGN std::cout BACK TO STDOUT
     std::cout.rdbuf(backup);
+}
+
+TEST_CASE("constructor4") {
+    // REDIRECT std::cout STREAM -- TO PROTECT AGAINST ERRORS
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // CREATE FILE AND FILE PROXY
+    std::string fileName = "file1.txt";
+    AbstractFile* realfile = new TextFile(fileName);
+    std::string password = "r4A3dg";
+    PasswordProxy* pp = new PasswordProxy(realfile, password);
+    unsigned int fileSize = 0;
+    // EXPECTATIONS FOR CONSTRUCTION
+    CHECK(fileName == pp->getName());
+    CHECK(fileSize == pp->getSize());
+    CHECK(fileName == realfile->getName());
+    CHECK(fileSize == realfile->getSize());
+}
+TEST_CASE("writeValidPassword") {
+    // CREATE FILE AND FILE PROXY
+    std::string fileName = "file1.txt";
+    AbstractFile* realfile = new TextFile(fileName);
+    std::string password = "r4A3dg";
+    PasswordProxy* pp = new PasswordProxy(realfile, password);
+    std::vector<char> v = { 'h', 'i' };
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // SET UP PASSWORD STREAM
+    ss_in << password;
+    // EXPECTATIONS FOR FUNCTION -- VALID PASSWORD
+    CHECK(0 == pp->write(v));
+    CHECK(static_cast<unsigned int>(v.size()) == pp->getSize());
+    CHECK(static_cast<unsigned int>(v.size()) == realfile->getSize());
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("writeInvalidPassword") {
+    // CREATE FILE AND FILE PROXY
+    std::string fileName = "file1.txt";
+    AbstractFile* realfile = new TextFile(fileName);
+    std::string password = "r4A3dg";
+    PasswordProxy* pp = new PasswordProxy(realfile, password);
+    std::vector<char> v = { 'h', 'i' };
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // SET UP PASSWORD STREAM
+    std::string wrongPassword = "s9K3qL";
+    ss_in << wrongPassword;
+    // EXPECTATIONS FOR FUNCTION -- INVALID PASSWORD
+    CHECK(0 != pp->write(v));
+    CHECK(static_cast<unsigned int>(0) == pp->getSize());
+    CHECK(static_cast<unsigned int>(0) == realfile->getSize());
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("appendValidPassword") {
+    // CREATE FILE AND FILE PROXY
+    std::string fileName = "file1.txt";
+    AbstractFile* realfile = new TextFile(fileName);
+    std::string password = "r4A3dg";
+    PasswordProxy* pp = new PasswordProxy(realfile, password);
+    std::vector<char> v = { 'h', 'i' };
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // SET UP PASSWORD STREAM
+    ss_in << password + '\n' + password;
+    // EXPECTATIONS FOR FIRST FUNCTION -- VALID PASSWORD
+    CHECK(0 == pp->write(v));
+    CHECK(static_cast<unsigned int>(v.size()) == pp->getSize());
+    CHECK(static_cast<unsigned int>(v.size()) == realfile->getSize());
+    unsigned int fileSize = pp->getSize();
+    // EXPECTATIONS FOR SECOND FUNCTION -- INVALID PASSWORD
+    CHECK(0 == pp->append(v));
+    CHECK(static_cast<unsigned int>(fileSize + v.size()) == pp->getSize());
+    CHECK(static_cast<unsigned int>(fileSize + v.size()) == realfile->getSize());
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("appendInvalidPassword") {
+    // CREATE FILE AND FILE PROXY
+    std::string fileName = "file1.txt";
+    AbstractFile* realfile = new TextFile(fileName);
+    std::string password = "r4A3dg";
+    PasswordProxy* pp = new PasswordProxy(realfile, password);
+    std::vector<char> v = { 'h', 'i' };
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // SET UP PASSWORD STREAM
+    std::string wrongPassword = "a5lsdIK3";
+    ss_in << password + '\n' + wrongPassword;
+    // EXPECTATIONS FOR FIRST FUNCTION -- VALID PASSWORD
+    CHECK(0 == pp->write(v));
+    CHECK(static_cast<unsigned int>(v.size()) == pp->getSize());
+    CHECK(static_cast<unsigned int>(v.size()) == realfile->getSize());
+    unsigned int fileSize = pp->getSize();
+    // EXPECTATIONS FOR SECOND FUNCTION -- INVALID PASSWORD
+    CHECK(0 != pp->append(v));
+    CHECK(static_cast<unsigned int>(fileSize) == pp->getSize());
+    CHECK(static_cast<unsigned int>(fileSize) == realfile->getSize());
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("readValidPassword") {
+    // CREATE FILE AND FILE PROXY
+    std::string fileName = "file1.txt";
+    AbstractFile* realfile = new TextFile(fileName);
+    std::string password = "r4A3dg";
+    PasswordProxy* pp = new PasswordProxy(realfile, password);
+    std::vector<char> v = { 'h', 'i' };
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // SET UP PASSWORD STREAM
+    ss_in << password + '\n' + password;
+    // EXPECTATIONS FOR FIRST FUNCTION -- VALID PASSWORD
+    CHECK(0 == pp->write(v));
+    CHECK(static_cast<unsigned int>(v.size()) == pp->getSize());
+    CHECK(static_cast<unsigned int>(v.size()) == realfile->getSize());
+    // EXPECTATIONS FOR SECOND FUNCTION -- VALID PASSWORD
+    std::vector<char> contentsPP = pp->read();
+    CHECK(v.size() == contentsPP.size());
+    for (size_t i = 0; i < contentsPP.size(); ++i) {
+        CHECK(contentsPP[i] == v[i]);
+    }
+    std::vector<char> contentsRF = realfile->read();
+    CHECK(v.size() == contentsRF.size());
+    for (size_t i = 0; i < contentsRF.size(); ++i) {
+        CHECK(contentsRF[i] == v[i]);
+    }
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("readInvalidPassword") {
+    // CREATE FILE AND FILE PROXY
+    std::string fileName = "file1.txt";
+    AbstractFile* realfile = new TextFile(fileName);
+    std::string password = "r4A3dg";
+    PasswordProxy* pp = new PasswordProxy(realfile, password);
+    std::vector<char> v = { 'h', 'i' };
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // SET UP PASSWORD STREAM
+    std::string wrongPassword = "a5lsdIK3";
+    ss_in << password + '\n' + wrongPassword;
+    // EXPECTATIONS FOR FIRST FUNCTION -- VALID PASSWORD
+    CHECK(0 == pp->write(v));
+    CHECK(static_cast<unsigned int>(v.size()) == pp->getSize());
+    CHECK(static_cast<unsigned int>(v.size()) == realfile->getSize());
+    // EXPECTATIONS FOR SECOND FUNCTION -- INVALID PASSWORD
+    std::vector<char> contentsPP = pp->read();
+    CHECK(static_cast<size_t>(0) == contentsPP.size());
+    std::vector<char> contentsRF = realfile->read();
+    CHECK(static_cast<size_t>(v.size()) == contentsRF.size());
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("acceptValidPassword") {
+    // CREATE FILE AND FILE PROXY
+    std::string fileName = "file1.txt";
+    AbstractFile* realfile = new TextFile(fileName);
+    std::string password = "r4A3dg";
+    PasswordProxy* pp = new PasswordProxy(realfile, password);
+    std::vector<char> v = { 'h', 'i' };
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // SET UP PASSWORD STREAM
+    ss_in << password + '\n' + password;
+    // EXPECTATIONS FOR FIRST FUNCTION -- VALID PASSWORD
+    CHECK(0 == pp->write(v));
+    CHECK(static_cast<unsigned int>(v.size()) == pp->getSize());
+    CHECK(static_cast<unsigned int>(v.size()) == realfile->getSize());
+    // EXPECTATIONS FOR SECOND FUNCTION -- VALID PASSWORD
+    BasicDisplayVisitor* bdv = new BasicDisplayVisitor;
+    pp->accept(bdv);
+    std::string wordShouldBe = "hi";
+    std::string word;
+    std::vector<std::string> printedWords;
+    while (ss_out >> word) {
+        printedWords.push_back(word);
+    }
+    std::vector<std::string>::iterator it1;
+    it1 = std::find(printedWords.begin(), printedWords.end(), wordShouldBe);
+    bool isEqual = it1 == printedWords.end();
+    CHECK(! isEqual);
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("acceptInvalidPassword") {
+    // CREATE FILE AND FILE PROXY
+    std::string fileName = "file1.txt";
+    AbstractFile* realfile = new TextFile(fileName);
+    std::string password = "r4A3dg";
+    PasswordProxy* pp = new PasswordProxy(realfile, password);
+    std::vector<char> v = { 'h', 'i' };
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // SET UP PASSWORD STREAM
+    std::string wrongPassword = "a5lsdIK3";
+    ss_in << password + '\n' + wrongPassword;
+    // EXPECTATIONS FOR FIRST FUNCTION -- VALID PASSWORD
+    CHECK(0 == pp->write(v));
+    CHECK(static_cast<unsigned int>(v.size()) == pp->getSize());
+    CHECK(static_cast<unsigned int>(v.size()) == realfile->getSize());
+    // EXPECTATIONS FOR SECOND FUNCTION -- INVALID PASSWORD
+    BasicDisplayVisitor* bdv = new BasicDisplayVisitor;
+    pp->accept(bdv);
+    std::string wordShouldBe = "hi";
+    std::string word;
+    std::vector<std::string> printedWords;
+    while (ss_out >> word) {
+        printedWords.push_back(word);
+    }
+    std::vector<std::string>::iterator it1;
+    it1 = std::find(printedWords.begin(), printedWords.end(), wordShouldBe);
+    bool isEqual = it1 == printedWords.end();
+    CHECK(isEqual);
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
 }
