@@ -2,7 +2,7 @@
 
 write a few “commands” or programs that use the interface provided by the file system to create, remove, read, and write files.
 
-able to interact with the filesystem by running these commands through a command prompt.
+able to interact with the filesystem by running these commands through a command_ prompt.
 
 create an abstract base class that declares the interface shared by all file types and then implement this interface to create a class representing a text file.
 
@@ -14,6 +14,6 @@ use the visitor pattern to display the contents of files in unique ways. The “
 
 use the proxy pattern to add functionality for password protected files.
 
-implement the command pattern to create a command prompt that listens for user input and executes a “command” based on the command issued by the user. implement the “touch” command, which creates a new file and adds it to the file system.
+implement the command_ pattern to create a command_ prompt that listens for user input and executes a “command_” based on the command_ issued by the user. implement the “touch” command_, which creates a new file and adds it to the file system.
 
 implement several more “commands” using a couple of different design patterns. able to interact with the filesystem implementation by interactively executing commands to do things like create files and password protected files, write to files, read from files, copy files, delete files, etc.

@@ -8,6 +8,9 @@
 #include "BasicDisplayVisitor.h"
 #include "MetadataDisplayVisitor.h"
 #include "PasswordProxy.h"
+#include "CommandPrompt.h"
+#include "CommandTest.h"
+#include "TouchCommand.h"
 #include <iostream>
 
 bool run_tests() {
@@ -26,7 +29,7 @@ int use_arguments(int argc, const char * argv[]) {
                 }
             }
             else {
-                std::cerr << "Error: Invalid command." << std::endl;
+                std::cerr << "Error: Invalid command_." << std::endl;
                 exit(1);
             }
         }
@@ -741,4 +744,369 @@ TEST_CASE("acceptInvalidPassword") {
     std::cout.rdbuf(backup_out);
     // ASSIGN std::cin BACK TO STDIN
     std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("addAndListCommands") {
+    // SET UP FILE SYSTEM
+    AbstractFileSystem* sfs = new SimpleFileSystem();
+    AbstractFileFactory* sff = new SimpleFileFactory();
+    CommandPrompt cp;
+    cp.setFileSystem(sfs);
+    cp.setFileFactory(sff);
+    // ADD COMMAND -- TEST COMMAND
+    CommandTest* ct = new CommandTest(sfs);
+    std::string commandname = "test";
+    CHECK(0 == cp.addCommand(commandname, ct));
+    // REDIRECT STD STREAM
+    std::streambuf* backup;
+    backup = std::cout.rdbuf();
+    std::stringstream ss;
+    std::cout.rdbuf(ss.rdbuf());
+    // LIST COMMANDS
+    cp.listCommands();
+    std::string word;
+    std::vector<std::string> printedWords;
+    while (ss >> word) {
+        printedWords.push_back(word);
+    }
+    // EXPECTATION -- COMMAND NAME SHOULD BE PRINTED TO std::cout
+    CHECK(1 == static_cast<int>(printedWords.size()));
+    CHECK(commandname == printedWords[0]);
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup);
+}
+
+TEST_CASE("prompt") {
+    // SET UP FILE SYSTEM
+    AbstractFileSystem* sfs = new SimpleFileSystem();
+    AbstractFileFactory* sff = new SimpleFileFactory();
+    CommandPrompt* cp = new CommandPrompt;
+    cp->setFileSystem(sfs);
+    cp->setFileFactory(sff);
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // MIMIC USER INPUT -- SAMPLE COMMAND FOR TOUCH
+    std::string input = "touch file.txt";
+    ss_in << input;
+    // EXPECTATION -- PROMPT SHOULD RETURN THE USER INPUT
+    std::string promptResponse = cp->prompt();
+    CHECK(input == promptResponse);
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("runQuit") {
+    // SET UP FILE SYSTEM
+    AbstractFileSystem* sfs = new SimpleFileSystem();
+    AbstractFileFactory* sff = new SimpleFileFactory();
+    CommandPrompt* cp = new CommandPrompt;
+    cp->setFileSystem(sfs);
+    cp->setFileFactory(sff);
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // MIMC USER INPUT -- QUITTING COMMAND -- 'Q'
+    std::string input = "q";
+    ss_in << input;
+    // CAPUTRE RETURN VALUE -- Q SHOULD END THE RUN LOOP
+    int response = cp->run();
+    CHECK(0 != response);
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("runHelp") {
+    // SET UP FILE SYSTEM
+    AbstractFileSystem* sfs = new SimpleFileSystem();
+    AbstractFileFactory* sff = new SimpleFileFactory();
+    CommandPrompt* cp = new CommandPrompt;
+    cp->setFileSystem(sfs);
+    cp->setFileFactory(sff);
+    // ADD COMMAND -- COMMAND TEST
+    CommandTest* ct = new CommandTest(sfs);
+    std::string commandname = "test";
+    CHECK(0 == cp->addCommand(commandname, ct));
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // MIMIC USER INPUT -- HELP & QUIT -- USE QUIT TO END RUN
+    std::string input = "help\nq";
+    ss_in << input;
+    int response = cp->run();
+    CHECK(0 != response);
+    // CAPTURE std::cout DATA
+    std::string word;
+    std::vector<std::string> printedWords;
+    while (ss_out >> word) {
+        printedWords.push_back(word);
+    }
+    // EXPECTATION -- PROGRAM SHOULD PRINT ALL COMMANDS
+    std::vector<std::string>::iterator it1;
+    it1 = std::find(printedWords.begin(), printedWords.end(), commandname);
+    bool notEqual1 = it1 == printedWords.end();
+    CHECK(! notEqual1);
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("commandDisplayInfo") {
+    // SET UP FILE SYSTEM
+    AbstractFileSystem* sfs = new SimpleFileSystem();
+    AbstractFileFactory* sff = new SimpleFileFactory();
+    CommandPrompt* cp = new CommandPrompt;
+    cp->setFileSystem(sfs);
+    cp->setFileFactory(sff);
+    // ADD COMMAND -- COMMAND TEST
+    CommandTest* ct = new CommandTest(sfs);
+    std::string commandname = "test";
+    CHECK(0 == cp->addCommand(commandname, ct));
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // MIMIC USER INPUT -- SPECIFIC HELP COMMAND
+    std::string input = "help test\nq\n";
+    ss_in << input;
+    int response = cp->run();
+    CHECK(0 != response);
+    std::string word;
+    std::vector<std::string> printedWords;
+    while (ss_out >> word) {
+        printedWords.push_back(word);
+    }
+    /// EXPECTATION -- DISPLAY INFO OF OUR COMMAND TEST SHOULD BE PRINTED TO std::cout
+    std::vector<std::string>::iterator it1;
+    std::string expectedString = "aRandomstd::stringz"; // MATCHES GIVEN COMMAND TEST FILE
+    it1 = std::find(printedWords.begin(), printedWords.end(), expectedString);
+    bool notEqual1 = it1 != printedWords.end();
+    CHECK(! notEqual1);
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("commandExecuteNoInfo") {
+    // SET UP FILE SYSTEM
+    AbstractFileSystem* sfs = new SimpleFileSystem();
+    AbstractFileFactory* sff = new SimpleFileFactory();
+    CommandPrompt* cp = new CommandPrompt;
+    cp->setFileSystem(sfs);
+    cp->setFileFactory(sff);
+    // ADD COMMAND
+    CommandTest* ct = new CommandTest(sfs);
+    std::string commandname = "test";
+    CHECK(0 == cp->addCommand(commandname, ct));
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // MIMIC USER INPUT -- COMMAND TEST EXECUTE 
+    std::string input = "test\nq\n";
+    ss_in << input;
+    // CAPTURE RUN OUTPUT
+    int response = cp->run();
+    CHECK(0 != response);
+    std::string word;
+    std::vector<std::string> printedWords;
+    while (ss_out >> word) {
+        printedWords.push_back(word);
+    }
+    // EXPECTATION -- NOTHING SHOULD BE PASSED TO THE FUNCTION
+    std::vector<std::string>::iterator it1;
+    std::string expectedOutput = "command-test-no-info";
+    it1 = std::find(printedWords.begin(), printedWords.end(), expectedOutput);
+    bool notEqual1 = it1 == printedWords.end();
+    CHECK(! notEqual1);
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("commandExecuteOneInput") {
+    // SET UP FILE SYSTEM
+    AbstractFileSystem* sfs = new SimpleFileSystem();
+    AbstractFileFactory* sff = new SimpleFileFactory();
+    CommandPrompt* cp = new CommandPrompt;
+    cp->setFileSystem(sfs);
+    cp->setFileFactory(sff);
+    // ADD COMMAND
+    CommandTest* ct = new CommandTest(sfs);
+    std::string commandname = "test";
+    CHECK(0 == cp->addCommand(commandname, ct));
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // MIMIC USER INPUT
+    std::string input = "test foo\nq\n";
+    ss_in << input;
+    int response = cp->run();
+    CHECK(0 != response);
+    std::string word;
+    std::vector<std::string> printedWords;
+    while (ss_out >> word) {
+        printedWords.push_back(word);
+    }
+    // EXPECTATION -- THE SECOND PARAMETER SHOULD BE PRINTED TO std::cout
+    std::vector<std::string>::iterator it1;
+    std::string expectedOutput = "foo";
+    it1 = std::find(printedWords.begin(), printedWords.end(), expectedOutput);
+    bool notEqual1 = it1 == printedWords.end();
+    CHECK(! notEqual1);
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("commandExecuteMoreInputs") {
+    // SET UP FILE SYSTEM
+    AbstractFileSystem* sfs = new SimpleFileSystem();
+    AbstractFileFactory* sff = new SimpleFileFactory();
+    CommandPrompt* cp = new CommandPrompt;
+    cp->setFileSystem(sfs);
+    cp->setFileFactory(sff);
+    // ADD COMMAND
+    CommandTest* ct = new CommandTest(sfs);
+    std::string commandname = "test";
+    CHECK(0 == cp->addCommand(commandname, ct));
+    // REDIRECT std::cout STREAM
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // REDIRECT std::cin STREAM
+    std::streambuf* backup_in;
+    backup_in = std::cin.rdbuf();
+    std::stringstream ss_in;
+    std::cin.rdbuf(ss_in.rdbuf());
+    // MIMIC USER INPUT
+    std::string input = "test foo moo\nq\n";
+    ss_in << input;
+    int response = cp->run();
+    CHECK(0 != response);
+    std::string word;
+    std::vector<std::string> printedWords;
+    while (ss_out >> word) {
+        printedWords.push_back(word);
+    }
+    // EXPECTATION -- ALL PARAMETERS SHOULD BE PRINTED TO std::cout
+    std::vector<std::string>::iterator it1;
+    std::string expectedOutput = "foo:moo";
+    it1 = std::find(printedWords.begin(), printedWords.end(), expectedOutput);
+    bool notEqual1 = it1 == printedWords.end();
+    CHECK(! notEqual1);
+    // ASSIGN std::cout BACK TO STDOUT
+    std::cout.rdbuf(backup_out);
+    // ASSIGN std::cin BACK TO STDIN
+    std::cin.rdbuf(backup_in);
+}
+
+TEST_CASE("execute") {
+    // REDIRECT std::cout STREAM -- TO PROTECT AGAINST ERRORS
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // SET UP FILE SYSTEM
+    AbstractFileSystem* sfs = new SimpleFileSystem();
+    AbstractFileFactory* sff = new SimpleFileFactory();
+    // CREATE COMMAND
+    TouchCommand* tc = new TouchCommand(sfs, sff);
+    // CALL EXECUTE ON TOUCH COMMAND
+    std::string filename = "file.txt";
+    CHECK(0 == tc->execute(filename));
+    // EXPECTATION -- FILE EXISTS IN THE FILE SYSTEM
+    AbstractFile* file = sfs->openFile(filename);
+    bool isNull = file == nullptr;
+    CHECK(! isNull);
+    CHECK(file->getName() == filename);
+}
+TEST_CASE("executeInvalidExtension") {
+    // REDIRECT std::cout STREAM -- TO PROTECT AGAINST ERRORS
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // SET UP FILE SYSTEM
+    AbstractFileSystem* sfs = new SimpleFileSystem();
+    AbstractFileFactory* sff = new SimpleFileFactory();
+    // CREATE COMMAND
+    TouchCommand* tc = new TouchCommand(sfs, sff);
+    // CALL EXECUTE ON TOUCH COMMAND
+    std::string filename = "file.foo";
+    CHECK(0 != tc->execute(filename));
+    // EXPECTATION -- FILE DOES NOT EXISTS IN THE FILE SYSTEM
+    AbstractFile* file = sfs->openFile(filename);
+    bool isNull = file == nullptr;
+    CHECK(isNull);
+}
+
+TEST_CASE("executeFileAlreadyExists") {
+    // REDIRECT std::cout STREAM -- TO PROTECT AGAINST ERRORS
+    std::streambuf* backup_out;
+    backup_out = std::cout.rdbuf();
+    std::stringstream ss_out;
+    std::cout.rdbuf(ss_out.rdbuf());
+    // SET UP FILE SYSTEM
+    AbstractFileSystem* sfs = new SimpleFileSystem();
+    AbstractFileFactory* sff = new SimpleFileFactory();
+    // CREATE COMMAND
+    TouchCommand* tc = new TouchCommand(sfs, sff);
+    // CALL EXECUTE ON TOUCH COMMAND
+    std::string filename = "file.txt";
+    CHECK(0 == tc->execute(filename));
+    CHECK(0 != tc->execute(filename));
+    // EXPECTATION -- FILE DOES EXISTS IN THE FILE SYSTEM - FIRST EXECUTION
+    AbstractFile* file = sfs->openFile(filename);
+    bool isNull = file == nullptr;
+    CHECK(! isNull);
 }

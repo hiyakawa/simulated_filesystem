@@ -4,18 +4,14 @@
 #include "AbstractFileFactory.h"
 #include "AbstractFileSystem.h"
 
-using namespace std;
-
-class TouchCommand : public AbstractCommand
-{
-public:
-	TouchCommand(AbstractFileSystem*, AbstractFileFactory*);
-	virtual ~TouchCommand() = default;
-
-	virtual int execute(string) override;
-	virtual void displayInfo() override;
-
+class TouchCommand : public AbstractCommand {
 private:
-	AbstractFileSystem* afs;
-	AbstractFileFactory* aff;
+    AbstractFileSystem*  afs_;
+    AbstractFileFactory* aff_;
+
+public:
+    TouchCommand(AbstractFileSystem*, AbstractFileFactory*);
+
+    int  execute(std::string) override;
+	void displayInfo() override;
 };

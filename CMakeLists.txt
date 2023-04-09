@@ -15,4 +15,8 @@ add_executable(simulated_filesystem
         AbstractFileVisitor.h
         BasicDisplayVisitor.h BasicDisplayVisitor.cpp
         MetadataDisplayVisitor.h MetadataDisplayVisitor.cpp
-        PasswordProxy.h PasswordProxy.cpp)
+        PasswordProxy.h PasswordProxy.cpp
+        AbstractCommand.h
+        CommandPrompt.h CommandPrompt.cpp
+        TouchCommand.h TouchCommand.cpp
+        CommandTest.h CommandTest.cpp)

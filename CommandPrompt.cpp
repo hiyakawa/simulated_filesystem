@@ -1,157 +1,111 @@
 #include "CommandPrompt.h"
-
 #include <iostream>
-#include <sstream> 
+#include <sstream>
 
-using namespace std;
-
-CommandPrompt::CommandPrompt()
-	: afs(nullptr), aff(nullptr) {}
-
-void CommandPrompt::setFileSystem(AbstractFileSystem* fs)
-{
-	this->afs = fs;
+CommandPrompt::CommandPrompt() {
+    afs_ = nullptr;
+    aff_ = nullptr;
 }
 
-void CommandPrompt::setFileFactory(AbstractFileFactory* ff)
-{
-	this->aff = ff;
+void CommandPrompt::setFileSystem(AbstractFileSystem* afs) {
+	afs_ = afs;
 }
 
-int CommandPrompt::addCommand(string s, AbstractCommand* ptr)
-{
-	auto i = command.insert(pair<string, AbstractCommand*>(s, ptr));
-
-	if (i.second)
-	{
-		return success;
-	}
-	else
-	{
-		return insertion_failed;
-	}
+void CommandPrompt::setFileFactory(AbstractFileFactory* aff) {
+	aff_ = aff;
 }
 
-void CommandPrompt::listCommands()
-{
-	map<string, AbstractCommand*>::iterator iter;
+int CommandPrompt::addCommand(std::string str, AbstractCommand* command) {
+	auto i = command_.insert(std::pair<std::string, AbstractCommand*>(str, command));
 
-	for (iter = command.begin(); iter != command.end(); iter++)
-	{
-		cout << iter->first << " ";
+	if (i.second) {
+		return SUCCESS;
 	}
 
-	cout << endl;
+    return INSERTION_FAILED;
 }
 
-string CommandPrompt::prompt()
-{
-	cout << "Enter a command, q to quit, help for a list of commands, or help followed by a command name for more information about that command." << endl;
-	cout << "$ " << flush;
+void CommandPrompt::listCommands() {
+	for (auto& i : command_) {
+		std::cout << i.first << " ";
+	}
 
-	string s;
-	getline(cin, s);
-
-	return s;
+	std::cout << std::endl;
 }
 
-int CommandPrompt::run()
-{
-	string input = prompt();
+std::string CommandPrompt::prompt() {
+	std::cout << "Enter a command, q to quit, help for a list of commands, or help followed by a command name for more information about that command." << std::endl;
+	std::cout << "$ ";
 
-	if (input.compare("q") == 0)
-	{
-		return user_quit;
-	}
-	
-	if (input.compare("help") == 0)
-	{
-		listCommands();
+	std::string input;
+	getline(std::cin, input);
 
-		return user_help;
-	}
+	return input;
+}
 
-	bool only_one_word = true;
+int CommandPrompt::run() {
+    while (true) {
+        std::string input = prompt();
 
-	for (unsigned int i = 0; i < input.size(); ++i)
-	{
-		if (input[i] == ' ')
-		{
-			only_one_word = false;
-		}
-	}
+        if (input == "q") {
+            return USER_QUIT;
+        }
 
-	if (only_one_word)
-	{
-		auto i = command.find(input);
+        if (input == "help") {
+            listCommands();
 
-		if (i != command.end())
-		{
-			int result = i->second->execute("");
+            return USER_HELP;
+        }
 
-			if (result == success)
-			{
-				return success;
-			}
-			else
-			{
-				cout << "The command returns an error." << endl;
-			}
-		}
-		else
-		{
-			cout << "The command did not exist." << endl;
-		}
-		
-		return command_error;
-	}
+        if (input.find(' ') == std::string::npos) {
+            int count = 0;
 
-	else
-	{
-		istringstream iss;
-		iss.str(input);
-		string first_word;
-		iss >> first_word;
+            for (auto& i : command_) {
+                if (i.first == input) {
+                    count++;
+                    i.second->execute("");
+                }
+            }
 
-		if (first_word.compare("help") == 0)
-		{
-			string second_word;
-			iss >> second_word;
+            if (count == 0) {
+                std::cout << "Command does not exist." << std::endl;
+            }
+        }
+        else {
+            std::istringstream iss;
+            std::string firstWord;
+            iss.str(input);
+            iss >> firstWord;
 
-			auto i = command.find(second_word);
+            if (firstWord == "help") {
+                std::string secondWord;
+                iss >> secondWord;
 
-			if (i != command.end())
-			{
-				i->second->displayInfo();
+                int count = 0;
 
-				return success;
-			}
+                for (auto& i : command_) {
+                    if (i.first == secondWord) {
+                        count++;
+                        i.second->displayInfo();
+                    }
+                }
 
-			cout << "The command did not exist." << endl;
+                if (count == 0) {
+                    std::cout << "Command does not exist." << std::endl;
+                }
+            }
 
-			return command_error;
-		}
+            int count = 0;
 
-		string command_context = input.substr(input.find(' ') + 1);
-
-		auto i = command.find(first_word);
-
-		if (i != command.end())
-		{
-			int result = i->second->execute(command_context);
-
-			if (result == success)
-			{
-				return success;
-			}
-			else
-			{
-				cout << "The command returns an error." << endl;
-			}
-		}
-
-		cout << "The command did not exist." << endl;
-
-		return command_error;
-	}
+            for (auto& i : command_) {
+                if (i.first == firstWord) {
+                    count++;
+                    i.second->execute(input.substr(input.find(' ') + 1));
+                }
+            }
+            if (count == 0) {
+                std::cout << "Command does not exist." << std::endl;
+            }
+        }
+    }
 }

@@ -3,10 +3,10 @@ CFLAGS= -std=c++11
 HEADER= $(wildcard *.h)
 CCSOURCE= $(wildcard *.cpp)
 
-filesystem: main.o TextFile.o ImageFile.o SimpleFileSystem.o SimpleFileFactory.o BasicDisplayVisitor.o MetadataDisplayVisitor.o PasswordProxy.o
-	$(CXX) $(CFLAGS) -o filesystem $^
+filesystem: main.o TextFile.o ImageFile.o SimpleFileSystem.o SimpleFileFactory.o BasicDisplayVisitor.o MetadataDisplayVisitor.o PasswordProxy.o CommandPrompt.o TouchCommand.o CommandTest.o
+	c++ -std=c++11 -o filesystem $^
 
-main.o: catch.h AbstractFile.h AbstractFileSystem.h AbstractFileFactory.h main.cpp
+main.o: catch.h AbstractFile.h AbstractFileSystem.h AbstractFileFactory.h AbstractCommand.h main.cpp
 	c++ -std=c++11 main.cpp -c
 
 TextFile.o: TextFile.h TextFile.cpp
@@ -30,6 +30,14 @@ MetadataDisplayVisitor.o: MetadataDisplayVisitor.h MetadataDisplayVisitor.cpp
 PasswordProxy.o: PasswordProxy.h PasswordProxy.cpp
 	c++ -c PasswordProxy.cpp
 
+CommandPrompt.o: CommandPrompt.h CommandPrompt.cpp
+	c++ -c CommandPrompt.cpp
+
+TouchCommand.o: TouchCommand.h TouchCommand.cpp
+	c++ -c TouchCommand.cpp
+
+CommandTest.o: CommandTest.h CommandTest.cpp
+	c++ -c CommandTest.cpp
 
 .PHONY: test
 test: filesystem
