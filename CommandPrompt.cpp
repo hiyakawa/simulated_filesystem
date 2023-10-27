@@ -8,39 +8,39 @@ CommandPrompt::CommandPrompt() {
 }
 
 void CommandPrompt::setFileSystem(AbstractFileSystem* afs) {
-	afs_ = afs;
+    afs_ = afs;
 }
 
 void CommandPrompt::setFileFactory(AbstractFileFactory* aff) {
-	aff_ = aff;
+    aff_ = aff;
 }
 
 int CommandPrompt::addCommand(std::string str, AbstractCommand* command) {
-	auto i = command_.insert(std::pair<std::string, AbstractCommand*>(str, command));
+    auto i = command_.insert(std::pair<std::string, AbstractCommand*>(str, command));
 
-	if (i.second) {
-		return SUCCESS;
-	}
+    if (i.second) {
+        return SUCCESS;
+    }
 
     return INSERTION_FAILED;
 }
 
 void CommandPrompt::listCommands() {
-	for (auto& i : command_) {
-		std::cout << i.first << " ";
-	}
+    for (auto& i : command_) {
+        std::cout << i.first << " ";
+    }
 
-	std::cout << std::endl;
+    std::cout << std::endl;
 }
 
 std::string CommandPrompt::prompt() {
-	std::cout << "Enter a command, q to quit, help for a list of commands, or help followed by a command name for more information about that command." << std::endl;
-	std::cout << "$ ";
+    std::cout << "Enter a command, q to quit, help for a list of commands, or help followed by a command name for more information about that command." << std::endl;
+    std::cout << "$ ";
 
-	std::string input;
-	getline(std::cin, input);
+    std::string input;
+    getline(std::cin, input);
 
-	return input;
+    return input;
 }
 
 int CommandPrompt::run() {
